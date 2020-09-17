@@ -31,20 +31,24 @@ Vue.use(duoImageViewer)
 
 ```vue
 <template>
-  <button @click="handleOpen">打开查看器</button>
-  <duo-image-viewer 
-    :src="src" 
-    :srcList="srcList" 
-    @close="handleClose" 
-    :showViewer="showViewer"
-  />
+  <div>
+    <button @click="handleOpen">打开查看器</button>
+    <duo-image-viewer 
+      :src="src" 
+      :srcList="srcList" 
+      @close="handleClose" 
+      :showViewer="showViewer"
+    />
+  </div>
 </template>
 <script>
 export default {
   data() {
     return {
-      src:
-        "https://baidu.com/pictures/2020-09-08/1599535213868-GDJJZizFVtepBxlXpq.jpg",
+      src: {
+        name: '',
+        url: "https://baidu.com/pictures/2020-09-08/1599535213868-GDJJZizFVtepBxlXpq.jpg"
+      },
       srcList: [
         "https://baidu.com/pictures/2020-09-08/1599535213868-GDJJZizFVtepBxlXpq.jpg",
         "https://baidu.com/pictures/2020-09-08/1599535221238-tQfrTrrwOLSdhtiVBY.jpg",

@@ -23,8 +23,8 @@
       <div class="viewer-navbar">
         <ul class="thumbnail-list">
           <li
-            :key="item"
-            v-for="item in srcList"
+            :key="item+i"
+            v-for="(item, i) in srcList"
             :class="item === realSrc ? 'thumbnail-item viewer-current' : 'thumbnail-item'"
           >
             <img :src="item" alt="image" class="thumbnail-image" />

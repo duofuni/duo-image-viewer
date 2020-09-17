@@ -1,14 +1,16 @@
 {
   "name": "duo-image-viewer",
-  "version": "1.0.44",
+  "version": "1.0.45",
   "description": "a image viewer",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [
+    "image",
+    "view",
+    "viewer"
+  ],
   "author": "duofuni",
-  "license": "ISC",
-  "__npminstall_done": "Tue Sep 15 2020 23:21:55 GMT+0800 (GMT+08:00)",
-  "_from": "duo-image-viewer@1.0.44",
-  "_resolved": "https://registry.npm.taobao.org/duo-image-viewer/download/duo-image-viewer-1.0.44.tgz"
+  "license": "ISC"
 }
