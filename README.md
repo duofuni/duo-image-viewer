@@ -68,7 +68,7 @@ export default {
 </script>
 ```
 
-[→ simple demo](https://baidu.com)
+[→ simple demo](https://duofuni.github.io/duo-image-viewer/)
 
 ## 维护者
 
