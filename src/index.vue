@@ -1,10 +1,20 @@
 <template>
-  <div class="duo-image-viewer" v-show="showViewer" ref="duoViewer" @click="clickAgent">
+  <div
+    class="duo-image-viewer"
+    v-show="showViewer"
+    ref="duoViewer"
+    @click="clickAgent"
+  >
     <div class="viewer-mask">
-      <img ref="duoViewerImage" :src="realSrc" alt="image" class="viewer-image" />
+      <img
+        ref="duoViewerImage"
+        :src="realSrc"
+        alt="image"
+        class="viewer-image"
+      />
     </div>
     <div class="viewer-footer">
-      <div class="viewer-title">{{src}}</div>
+      <div class="viewer-title">{{ src }}</div>
       <div class="viewer-toolbar">
         <ul>
           <li class="viewer-zoom-in" data-viewer-action="zoom-in"></li>
@@ -17,17 +27,30 @@
           <li class="viewer-next" data-viewer-action="next"></li>
           <li class="viewer-reset" data-viewer-action="reset"></li>
           <li class="viewer-rotate-left" data-viewer-action="rotate-left"></li>
-          <li class="viewer-rotate-right" data-viewer-action="rotate-right"></li>
+          <li
+            class="viewer-rotate-right"
+            data-viewer-action="rotate-right"
+          ></li>
         </ul>
       </div>
       <div class="viewer-navbar">
         <ul class="thumbnail-list">
           <li
-            :key="item+i"
+            :key="item + i"
             v-for="(item, i) in srcList"
-            :class="item === realSrc ? 'thumbnail-item viewer-current' : 'thumbnail-item'"
+            :class="
+              item === realSrc
+                ? 'thumbnail-item viewer-current'
+                : 'thumbnail-item'
+            "
           >
-            <img :src="item" alt="image" class="thumbnail-image" />
+            <img
+              data-viewer-action="select"
+              :data-viewer-action-index="i"
+              :src="item"
+              alt="image"
+              class="thumbnail-image"
+            />
           </li>
         </ul>
       </div>
@@ -80,9 +103,8 @@ export default {
     },
   },
   mounted() {
-    let self = this;
-
     this.initDrag();
+    this.initMouseWheel();
     this.keydown();
     setTimeout(() => {
       this.storageDefaultWidthAndHeight();
@@ -173,20 +195,25 @@ export default {
         translateY: value[5].trim(),
       };
     },
-
     // Next or prev action
-    nextOrPrevAction(type) {
-      if (type === "prev") {
-        // prev action
-        this.currentIndex += this.currentIndex <= 0 ? 0 : -1;
-      } else {
-        // next action
-        let srcListLength = this.srcList.length - 1;
+    switchAction(a) {
+      switch (a) {
+        case "prev":
+          // prev action
+          this.currentIndex += this.currentIndex <= 0 ? 0 : -1;
+          break;
+        case "next":
+          // next action
+          let srcListLength = this.srcList.length - 1;
 
-        this.currentIndex +=
-          this.currentIndex >= srcListLength
-            ? srcListLength - this.currentIndex
-            : 1;
+          this.currentIndex +=
+            this.currentIndex >= srcListLength
+              ? srcListLength - this.currentIndex
+              : 1;
+          break;
+        default:
+          this.currentIndex = +a;
+          break;
       }
 
       this.viewerSrc = this.srcList[this.currentIndex];
@@ -250,11 +277,11 @@ export default {
         }
         if (e && e.keyCode == 37) {
           // left
-          this.nextOrPrevAction("prev");
+          this.switchAction("prev");
         }
         if (e && e.keyCode == 39) {
           // right
-          this.nextOrPrevAction("next");
+          this.switchAction("next");
         }
         if (e && e.keyCode == 38) {
           // up
@@ -265,8 +292,7 @@ export default {
 
     // Init element drag
     initDrag() {
-      let self = this,
-        drop = this.$refs["duoViewerImage"];
+      let drop = this.$refs["duoViewerImage"];
 
       if (!drop) return;
 
@@ -318,6 +344,33 @@ export default {
       };
     },
 
+    initMouseWheel() {
+      const scrollFn = (e) => {
+        e = e || window.event;
+        if (e.wheelDelta) {
+          // for IE/Google
+          if (e.wheelDelta > 0) {
+            this.zoom("out");
+          }
+          if (e.wheelDelta < 0) {
+            this.zoom("in");
+          }
+        } else if (e.detail) {
+          // for Firefox
+          if (e.detail > 0) {
+            this.zoom("out");
+          }
+          if (e.detail < 0) {
+            this.zoom("in");
+          }
+        }
+      };
+
+      document.addEventListener &&
+        document.addEventListener("DOMMouseScroll", scrollFn, false);
+      window.onmousewheel = document.onmousewheel = scrollFn;
+    },
+
     // Storage default width and height
     storageDefaultWidthAndHeight() {
       let image = this.$refs["duoViewerImage"];
@@ -339,16 +392,19 @@ export default {
           this.resetZoom();
           break;
         case "prev":
-          this.nextOrPrevAction("prev");
+          this.switchAction("prev");
           break;
         case "play":
           this.requestFullScreen();
           break;
         case "next":
-          this.nextOrPrevAction("next");
+          this.switchAction("next");
           break;
         case "reset":
           this.resetAll();
+          break;
+        case "select":
+          this.switchAction(e.target.getAttribute("data-viewer-action-index"));
           break;
         case "rotate-left":
           this.rotate("left");

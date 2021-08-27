@@ -45,10 +45,7 @@ Vue.use(duoImageViewer)
 export default {
   data() {
     return {
-      src: {
-        name: '',
-        url: "https://baidu.com/pictures/2020-09-08/1599535213868-GDJJZizFVtepBxlXpq.jpg"
-      },
+      src: "https://baidu.com/pictures/2020-09-08/1599535213868-GDJJZizFVtepBxlXpq.jpg",
       srcList: [
         "https://baidu.com/pictures/2020-09-08/1599535213868-GDJJZizFVtepBxlXpq.jpg",
         "https://baidu.com/pictures/2020-09-08/1599535221238-tQfrTrrwOLSdhtiVBY.jpg",
