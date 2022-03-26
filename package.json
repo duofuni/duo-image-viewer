@@ -1,6 +1,6 @@
 {
   "name": "duo-image-viewer",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "a image viewer",
   "main": "index.js",
   "scripts": {
