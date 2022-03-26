@@ -34,10 +34,11 @@ Vue.use(duoImageViewer)
   <div>
     <button @click="handleOpen">打开查看器</button>
     <duo-image-viewer 
-      :src="src" 
-      :srcList="srcList" 
-      @close="handleClose" 
-      :showViewer="showViewer"
+      :list="srcList"
+      @open="openCallback"
+      @close="closeCallback"
+      :show.sync="showViewer"
+      :currentIndex="currentIndex"
     />
   </div>
 </template>
@@ -45,21 +46,24 @@ Vue.use(duoImageViewer)
 export default {
   data() {
     return {
-      src: "https://baidu.com/pictures/2020-09-08/1599535213868-GDJJZizFVtepBxlXpq.jpg",
+      currentIndex: 0, // 打开图片查看器时，需要定位到的图片的索引
       srcList: [
-        "https://baidu.com/pictures/2020-09-08/1599535213868-GDJJZizFVtepBxlXpq.jpg",
-        "https://baidu.com/pictures/2020-09-08/1599535221238-tQfrTrrwOLSdhtiVBY.jpg",
-      ],
-      showViewer: false,
+        "https://scpic.chinaz.net/files/pic/pic9/202203/apic39703.jpg",
+        "https://scpic.chinaz.net/files/pic/pic9/202005/zzpic24899.jpg",
+        "https://scpic.chinaz.net/files/pic/pic9/202109/bpic24244.jpg",
+        "https://scpic.chinaz.net/files/pic/pic9/202110/hpic4529.jpg",
+        "https://scpic.chinaz.net/files/pic/pic9/201912/zzpic22106.jpg",
+        "https://scpic.chinaz.net/files/pic/pic9/202202/apic38580.jpg",
+      ], // 图片查看器数据集
+      showViewer: false, // 是否打开图片查看器
     };
   },
   methods: {
     handleOpen() {
-      this.showViewer = !this.showViewer
+      this.showViewer = true;
     },
-    handleClose() {
-      this.showViewer = false
-    }
+    openCallback() {}, // 打开时的回调
+    closeCallback() {}, // 关闭时的回调
   }
 };
 </script>

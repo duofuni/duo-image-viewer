@@ -1,62 +1,74 @@
 <template>
-  <div
-    class="duo-image-viewer"
-    v-show="showViewer"
-    ref="duoViewer"
-    @click="clickAgent"
-  >
-    <div class="viewer-mask">
+  <div class="duo-viewer" v-show="show" ref="duoViewer" @click="clickAgent">
+    <div class="duo-viewer-mask">
       <img
         ref="duoViewerImage"
         :src="realSrc"
         alt="image"
-        class="viewer-image"
+        class="duo-viewer-mask__image"
       />
     </div>
-    <div class="viewer-footer">
-      <div class="viewer-title">{{ src }}</div>
-      <div class="viewer-toolbar">
+    <div class="duo-viewer-footer">
+      <div class="duo-viewer-footer__title">{{ list[index] }}</div>
+      <div class="duo-viewer-footer__toolbar">
         <ul>
-          <li class="viewer-zoom-in" data-viewer-action="zoom-in"></li>
-          <li class="viewer-zoom-out" data-viewer-action="zoom-out"></li>
-          <li class="viewer-one-to-one" data-viewer-action="one-to-one"></li>
-          <li class="viewer-prev" data-viewer-action="prev"></li>
-
-          <li class="viewer-play" data-viewer-action="play"></li>
-
-          <li class="viewer-next" data-viewer-action="next"></li>
-          <li class="viewer-reset" data-viewer-action="reset"></li>
-          <li class="viewer-rotate-left" data-viewer-action="rotate-left"></li>
           <li
-            class="viewer-rotate-right"
+            class="duo-viewer-footer__zoom-in"
+            data-viewer-action="zoom-in"
+          ></li>
+          <li
+            class="duo-viewer-footer__zoom-out"
+            data-viewer-action="zoom-out"
+          ></li>
+          <li
+            class="duo-viewer-footer__one-to-one"
+            data-viewer-action="one-to-one"
+          ></li>
+          <li class="duo-viewer-footer__prev" data-viewer-action="prev"></li>
+
+          <li class="duo-viewer-footer__play" data-viewer-action="play"></li>
+
+          <li class="duo-viewer-footer__next" data-viewer-action="next"></li>
+          <li class="duo-viewer-footer__reset" data-viewer-action="reset"></li>
+          <li
+            class="duo-viewer-footer__rotate-left"
+            data-viewer-action="rotate-left"
+          ></li>
+          <li
+            class="duo-viewer-footer__rotate-right"
             data-viewer-action="rotate-right"
           ></li>
         </ul>
       </div>
-      <div class="viewer-navbar">
-        <ul class="thumbnail-list">
-          <li
-            :key="item + i"
-            v-for="(item, i) in srcList"
-            :class="
-              item === realSrc
-                ? 'thumbnail-item viewer-current'
-                : 'thumbnail-item'
-            "
+      <div class="duo-viewer-footer__navbar">
+        <div class="duo-viewer-footer__navbar-thumbnail-wrap">
+          <div
+            class="duo-viewer-footer__navbar-thumbnail-list"
+            :style="{ width: `${list.length * 32}px` }"
           >
-            <img
-              data-viewer-action="select"
-              :data-viewer-action-index="i"
-              :src="item"
-              alt="image"
-              class="thumbnail-image"
-            />
-          </li>
-        </ul>
+            <div
+              :key="item + i"
+              v-for="(item, i) in list"
+              :class="
+                i === index
+                  ? 'duo-viewer-footer__navbar-thumbnail-item viewer-current'
+                  : 'duo-viewer-footer__navbar-thumbnail-item'
+              "
+            >
+              <img
+                data-viewer-action="select"
+                :data-viewer-action-index="i"
+                :src="item"
+                alt="image"
+                class="duo-viewer-footer__navbar-thumbnail-image"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="viewer-close" @click="handleClose">
-      <div class="false"></div>
+    <div class="duo-viewer-close" @click="handleClose">
+      <div class="duo-viewer-close__off"></div>
     </div>
   </div>
 </template>
@@ -71,46 +83,53 @@ export default {
       defaultHeight: "",
       defaultWidth: "",
       viewerSrc: "",
-      currentIndex: 0,
+      index: 0,
     };
   },
   props: {
-    src: {
-      type: String,
-      default: "",
-    },
-    srcList: {
+    // image src list
+    list: {
       type: Array,
       default: [],
     },
-    showViewer: {
+    // control is show of viewer
+    show: {
       type: Boolean,
       default: false,
+    },
+    // default index
+    currentIndex: {
+      type: Number,
+      default: 0,
     },
   },
   computed: {
     realSrc() {
-      return this.viewerSrc ? this.viewerSrc : this.src;
+      return this.viewerSrc ? this.viewerSrc : this.list[this.index];
     },
   },
   watch: {
-    showViewer() {
-      if (this.showViewer) {
-        this.srcList.forEach((item, i) => {
-          item === this.src && (this.currentIndex = i);
-        });
+    show(val) {
+      if (val) {
+        this.$emit("open");
+        this.index = this.currentIndex;
+      } else {
+        this.$emit("close");
       }
     },
   },
   mounted() {
-    this.initDrag();
-    this.initMouseWheel();
-    this.keydown();
-    setTimeout(() => {
-      this.storageDefaultWidthAndHeight();
-    }, 100);
+    this.init();
   },
   methods: {
+    init() {
+      this.initDrag();
+      this.initMouseWheel();
+      this.keydown();
+      setTimeout(() => {
+        this.storageDefaultWidthAndHeight();
+      }, 100);
+    },
     // Reset position
     resetPosition() {
       let image = this.$refs["duoViewerImage"],
@@ -200,23 +219,21 @@ export default {
       switch (a) {
         case "prev":
           // prev action
-          this.currentIndex += this.currentIndex <= 0 ? 0 : -1;
+          this.index += this.index <= 0 ? 0 : -1;
           break;
         case "next":
           // next action
-          let srcListLength = this.srcList.length - 1;
+          let srcListLength = this.list.length - 1;
 
-          this.currentIndex +=
-            this.currentIndex >= srcListLength
-              ? srcListLength - this.currentIndex
-              : 1;
+          this.index +=
+            this.index >= srcListLength ? srcListLength - this.index : 1;
           break;
         default:
-          this.currentIndex = +a;
+          this.index = +a;
           break;
       }
 
-      this.viewerSrc = this.srcList[this.currentIndex];
+      this.viewerSrc = this.list[this.index];
     },
 
     // Set element Transform
@@ -415,7 +432,7 @@ export default {
       }
     },
     handleClose() {
-      this.$emit("close");
+      this.$emit("update:show", false);
       this.viewerSrc = "";
     },
   },
