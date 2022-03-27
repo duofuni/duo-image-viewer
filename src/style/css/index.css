@@ -135,7 +135,7 @@
 }
 .duo-viewer-footer__navbar-thumbnail-wrap {
   position: relative;
-  overflow-y: scroll;
+  overflow: hidden;
   width: 660px;
 }
 .duo-viewer-footer__navbar-thumbnail-list {

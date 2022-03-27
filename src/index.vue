@@ -44,7 +44,7 @@
         <div class="duo-viewer-footer__navbar-thumbnail-wrap">
           <div
             class="duo-viewer-footer__navbar-thumbnail-list"
-            :style="{ width: `${list.length * 32}px` }"
+            :style="{ width: `${list.length * 34}px` }"
           >
             <div
               :key="item + i"
@@ -75,14 +75,15 @@
 
 <script>
 import "./style/css/index.css";
+const imageObject = new Image();
 
 export default {
   name: "duoImageViewer",
   data() {
     return {
-      defaultHeight: "",
-      defaultWidth: "",
       viewerSrc: "",
+      image: null,
+      listDataCache: [],
       index: 0,
     };
   },
@@ -107,6 +108,9 @@ export default {
     realSrc() {
       return this.viewerSrc ? this.viewerSrc : this.list[this.index];
     },
+    currentData() {
+      return this.listDataCache[this.index];
+    },
   },
   watch: {
     show(val) {
@@ -122,17 +126,37 @@ export default {
     this.init();
   },
   methods: {
+    // global init
     init() {
       this.initDrag();
       this.initMouseWheel();
       this.keydown();
-      setTimeout(() => {
-        this.storageDefaultWidthAndHeight();
-      }, 100);
+      this.initListDataCache();
+    },
+    // Init listDataCache
+    initListDataCache(index = 0) {
+      this.list.forEach((item, i) => {
+        imageObject.src = item;
+        this.listDataCache[i] = {
+          transform: {
+            scaleX: "1",
+            skewY: "0",
+            translateX: "-50%",
+            translateY: "-50%",
+            rotate: "0deg",
+          },
+          width: `${imageObject.width}px`,
+          height: `${imageObject.height}px`,
+        };
+      });
+      const { width, height } = this.listDataCache[index];
+
+      this.setStyleByName(this.image, "width", width);
+      this.setStyleByName(this.image, "height", height);
     },
     // Reset position
     resetPosition() {
-      let image = this.$refs["duoViewerImage"],
+      let image = this.image,
         oldTransform = this.getCurrentTransform(image);
 
       this.setStyleByName(image, "top", "50%");
@@ -146,7 +170,7 @@ export default {
 
     // Reset Rotate
     resetRotate() {
-      let image = this.$refs["duoViewerImage"],
+      let image = this.image,
         oldTransform = this.getCurrentTransform(image);
 
       oldTransform.rotate = `0deg`;
@@ -156,10 +180,14 @@ export default {
 
     // Reset zoom action
     resetZoom() {
-      let image = this.$refs["duoViewerImage"];
+      let image = this.image;
 
-      this.setStyleByName(image, "width", `${this.defaultWidth}`);
-      this.setStyleByName(image, "height", `${this.defaultHeight}`);
+      imageObject.src = this.list[this.index];
+
+      const { width, height } = imageObject;
+
+      this.setStyleByName(image, "width", `${width}px`);
+      this.setStyleByName(image, "height", `${height}px`);
     },
 
     // Reset all action
@@ -167,11 +195,12 @@ export default {
       this.resetZoom();
       this.resetRotate();
       this.resetPosition();
+      this.initListDataCache(this.index);
     },
 
     // Rotate action
     rotate(type) {
-      let image = this.$refs["duoViewerImage"],
+      let image = this.image,
         oldTransform = this.getCurrentTransform(image),
         oldRotate = Math.round(
           Math.atan2(+oldTransform.skewY, +oldTransform.scaleX) *
@@ -184,7 +213,7 @@ export default {
 
       oldTransform.translateX = `${oldTransform.translateX}px`;
       oldTransform.translateY = `${oldTransform.translateY}px`;
-
+      this.currentData.transform = oldTransform;
       this.setTransform(image, oldTransform);
     },
 
@@ -234,6 +263,10 @@ export default {
       }
 
       this.viewerSrc = this.list[this.index];
+
+      this.setStyleByName(this.image, "width", this.currentData.width);
+      this.setStyleByName(this.image, "height", this.currentData.height);
+      this.setTransform(this.image, this.currentData.transform);
     },
 
     // Set element Transform
@@ -250,7 +283,7 @@ export default {
 
     // Zoom action
     zoom(type) {
-      let image = this.$refs["duoViewerImage"],
+      let image = this.image,
         w = +this.getStyleByName(image, "width").split("px")[0],
         h = +this.getStyleByName(image, "height").split("px")[0];
 
@@ -263,6 +296,9 @@ export default {
         this.setStyleByName(image, "width", `${w * (1 + 0.1)}px`);
         this.setStyleByName(image, "height", `${h * (1 + 0.1)}px`);
       }
+
+      this.currentData.width = this.getStyleByName(this.image, "width");
+      this.currentData.height = this.getStyleByName(this.image, "height");
     },
 
     // FullScreen action
@@ -309,7 +345,7 @@ export default {
 
     // Init element drag
     initDrag() {
-      let drop = this.$refs["duoViewerImage"];
+      let drop = (this.image = this.$refs["duoViewerImage"]);
 
       if (!drop) return;
 
@@ -386,14 +422,6 @@ export default {
       document.addEventListener &&
         document.addEventListener("DOMMouseScroll", scrollFn, false);
       window.onmousewheel = document.onmousewheel = scrollFn;
-    },
-
-    // Storage default width and height
-    storageDefaultWidthAndHeight() {
-      let image = this.$refs["duoViewerImage"];
-
-      this.defaultHeight = this.getStyleByName(image, "height");
-      this.defaultWidth = this.getStyleByName(image, "width");
     },
 
     // Agent
