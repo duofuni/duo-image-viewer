@@ -43,8 +43,12 @@
       <div class="duo-viewer-footer__navbar">
         <div class="duo-viewer-footer__navbar-thumbnail-wrap">
           <div
+            ref="duoViewerImageThumbnailList"
             class="duo-viewer-footer__navbar-thumbnail-list"
-            :style="{ width: `${list.length * 34}px` }"
+            :class="[
+              listLength < 20 && 'duo-viewer-footer__navbar-align-center',
+            ]"
+            :style="{ width: `${listLength * 34}px` }"
           >
             <div
               :key="item + i"
@@ -75,7 +79,6 @@
 
 <script>
 import "./style/css/index.css";
-const imageObject = new Image();
 
 export default {
   name: "duoImageViewer",
@@ -105,6 +108,9 @@ export default {
     },
   },
   computed: {
+    listLength() {
+      return this.list.length;
+    },
     realSrc() {
       return this.viewerSrc ? this.viewerSrc : this.list[this.index];
     },
@@ -135,6 +141,8 @@ export default {
     },
     // Init listDataCache
     initListDataCache(index = 0) {
+      const imageObject = new Image();
+
       this.list.forEach((item, i) => {
         imageObject.src = item;
         this.listDataCache[i] = {
@@ -181,6 +189,7 @@ export default {
     // Reset zoom action
     resetZoom() {
       let image = this.image;
+      const imageObject = new Image();
 
       imageObject.src = this.list[this.index];
 
@@ -245,6 +254,7 @@ export default {
     },
     // Next or prev action
     switchAction(a) {
+      // let lastIndex = this.index;
       switch (a) {
         case "prev":
           // prev action
@@ -252,7 +262,7 @@ export default {
           break;
         case "next":
           // next action
-          let srcListLength = this.list.length - 1;
+          let srcListLength = this.listLength - 1;
 
           this.index +=
             this.index >= srcListLength ? srcListLength - this.index : 1;
@@ -261,6 +271,7 @@ export default {
           this.index = +a;
           break;
       }
+      // this.judgeThumbnailListLeft(lastIndex, this.index);
 
       this.viewerSrc = this.list[this.index];
 
@@ -268,7 +279,38 @@ export default {
       this.setStyleByName(this.image, "height", this.currentData.height);
       this.setTransform(this.image, this.currentData.transform);
     },
+    // judgeThumbnailListLeft(lastIndex, index) {
+    //   if (lastIndex == index) return;
+    //   let length = this.listLength,
+    //     target = this.$refs["duoViewerImageThumbnailList"],
+    //     tmp = Math.round((index * 34) / 0.66) / 3,
+    //     step = index - lastIndex;
+    //   if (step <= 0 && tmp > 0) {
+    //     tmp = 0;
+    //   }
+    //   console.log(step > 0, tmp);
+    //   this.setStyleByName(
+    //     target,
+    //     "left",
+    //     `${step > 0 ? "-" : ""}${Math.floor(tmp)}px`
+    //   );
 
+      // let length = this.listLength,
+      //   step = index - lastIndex,
+      //   absStep = Math.abs(step),
+      //   move = 34 * Math.floor(absStep / 2),
+      //   target = this.$refs["duoViewerImageThumbnailList"];
+      // if (absStep <= 3) return;
+
+      // if (step > 0) {
+      //    
+      //   this.setStyleByName(target, "left", `-${move}px`);
+      // } else {
+      //    
+      //   this.setStyleByName(target, "left", `${move}px`);
+      // }
+      // console.log(step, absStep, move,"cccc");
+    // },
     // Set element Transform
     setTransform(obj, transformValue) {
       let str = "";
