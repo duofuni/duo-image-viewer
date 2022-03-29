@@ -23,6 +23,8 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 8;
+  transition-property: transform, height, width;
+  transition-duration: 0.3s, 0.3s, 0.3s;
 }
 .duo-viewer-footer {
   position: absolute;
@@ -123,7 +125,7 @@
   float: left;
   font-size: 0;
   width: 30px;
-  opacity: 0.5;
+  opacity: 0.2;
   overflow: hidden;
   -webkit-transition: opacity 0.15s;
   transition: opacity 0.15s;
@@ -144,12 +146,8 @@
   box-sizing: border-box;
   position: absolute;
   top: 0;
-  left: 0;
-  transition: left 0.3s;
-}
-.duo-viewer-footer__navbar-align-center {
   left: 50%;
-  transform: translateX(-50%);
+  transition: all 0.3s;
 }
 .duo-viewer-close {
   background-color: rgba(0, 0, 0, 0.9);

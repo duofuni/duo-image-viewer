@@ -9,7 +9,7 @@
       />
     </div>
     <div class="duo-viewer-footer">
-      <div class="duo-viewer-footer__title">{{ list[index] }}</div>
+      <div class="duo-viewer-footer__title">{{ realSrc }}</div>
       <div class="duo-viewer-footer__toolbar">
         <ul>
           <li
@@ -45,9 +45,6 @@
           <div
             ref="duoViewerImageThumbnailList"
             class="duo-viewer-footer__navbar-thumbnail-list"
-            :class="[
-              listLength < 20 && 'duo-viewer-footer__navbar-align-center',
-            ]"
             :style="{ width: `${listLength * 34}px` }"
           >
             <div
@@ -91,17 +88,17 @@ export default {
     };
   },
   props: {
-    // image src list
+    // Image src list
     list: {
       type: Array,
       default: [],
     },
-    // control is show of viewer
+    // Control is show of viewer
     show: {
       type: Boolean,
       default: false,
     },
-    // default index
+    // Default index
     currentIndex: {
       type: Number,
       default: 0,
@@ -112,7 +109,7 @@ export default {
       return this.list.length;
     },
     realSrc() {
-      return this.viewerSrc ? this.viewerSrc : this.list[this.index];
+      return this.list[this.index];
     },
     currentData() {
       return this.listDataCache[this.index];
@@ -132,7 +129,7 @@ export default {
     this.init();
   },
   methods: {
-    // global init
+    // Global init
     init() {
       this.initDrag();
       this.initMouseWheel();
@@ -141,26 +138,42 @@ export default {
     },
     // Init listDataCache
     initListDataCache(index = 0) {
-      const imageObject = new Image();
+      const promises = [];
+      let $this = this;
 
       this.list.forEach((item, i) => {
-        imageObject.src = item;
-        this.listDataCache[i] = {
-          transform: {
-            scaleX: "1",
-            skewY: "0",
-            translateX: "-50%",
-            translateY: "-50%",
-            rotate: "0deg",
-          },
-          width: `${imageObject.width}px`,
-          height: `${imageObject.height}px`,
-        };
-      });
-      const { width, height } = this.listDataCache[index];
+        const imageObject = new Image();
+        promises.push(
+          new Promise((resolve) => {
+            imageObject.onload = function () {
+              $this.listDataCache[i] = {
+                transform: {
+                  scaleX: "1",
+                  skewY: "0",
+                  translateX: "-50%",
+                  translateY: "-50%",
+                  rotate: "0deg",
+                },
+                left: "50%",
+                top: "50%",
+                width: `${imageObject.width}px`,
+                height: `${imageObject.height}px`,
+              };
 
-      this.setStyleByName(this.image, "width", width);
-      this.setStyleByName(this.image, "height", height);
+              resolve("");
+              imageObject.onload = null;
+            };
+            imageObject.src = item;
+          })
+        );
+      });
+
+      Promise.all(promises).then((data) => {
+        const { width, height } = $this.listDataCache[index];
+
+        $this.setStyleByName($this.image, "width", width);
+        $this.setStyleByName($this.image, "height", height);
+      });
     },
     // Reset position
     resetPosition() {
@@ -228,9 +241,7 @@ export default {
 
     // Get style by name
     getStyleByName(obj, type) {
-      return Object.prototype.toString.call(obj) === "[object HTMLImageElement]"
-        ? window.getComputedStyle(obj, null)[type]
-        : "";
+      return window.getComputedStyle(obj, null)[type];
     },
 
     // Set style by name
@@ -240,8 +251,12 @@ export default {
 
     // Get element current transform
     getCurrentTransform(obj) {
-      let transform = this.getStyleByName(obj, "transform"),
-        value = transform.split("(")[1].split(")")[0].split(",");
+      let value,
+        transform = this.getStyleByName(obj, "transform");
+
+      if (transform === "none") return;
+
+      value = transform.split("(")[1].split(")")[0].split(",");
 
       return {
         scaleX: value[0].trim(),
@@ -254,7 +269,7 @@ export default {
     },
     // Next or prev action
     switchAction(a) {
-      // let lastIndex = this.index;
+      let lastIndex = this.index;
       switch (a) {
         case "prev":
           // prev action
@@ -271,46 +286,39 @@ export default {
           this.index = +a;
           break;
       }
-      // this.judgeThumbnailListLeft(lastIndex, this.index);
-
-      this.viewerSrc = this.list[this.index];
+      this.judgeThumbnailListMove(lastIndex, this.index);
 
       this.setStyleByName(this.image, "width", this.currentData.width);
       this.setStyleByName(this.image, "height", this.currentData.height);
+      this.setStyleByName(this.image, "left", this.currentData.left);
+      this.setStyleByName(this.image, "top", this.currentData.top);
       this.setTransform(this.image, this.currentData.transform);
     },
-    // judgeThumbnailListLeft(lastIndex, index) {
-    //   if (lastIndex == index) return;
-    //   let length = this.listLength,
-    //     target = this.$refs["duoViewerImageThumbnailList"],
-    //     tmp = Math.round((index * 34) / 0.66) / 3,
-    //     step = index - lastIndex;
-    //   if (step <= 0 && tmp > 0) {
-    //     tmp = 0;
-    //   }
-    //   console.log(step > 0, tmp);
-    //   this.setStyleByName(
-    //     target,
-    //     "left",
-    //     `${step > 0 ? "-" : ""}${Math.floor(tmp)}px`
-    //   );
+    // To judge thumbnail list move
+    judgeThumbnailListMove(lastIndex, index) {
+      if (lastIndex == index) return;
 
-      // let length = this.listLength,
-      //   step = index - lastIndex,
-      //   absStep = Math.abs(step),
-      //   move = 34 * Math.floor(absStep / 2),
-      //   target = this.$refs["duoViewerImageThumbnailList"];
-      // if (absStep <= 3) return;
+      let translateX = 0,
+        lastTransform = 0,
+        step = index - lastIndex,
+        move = step * 34,
+        length = this.listLength,
+        target = this.$refs["duoViewerImageThumbnailList"];
 
-      // if (step > 0) {
-      //    
-      //   this.setStyleByName(target, "left", `-${move}px`);
-      // } else {
-      //    
-      //   this.setStyleByName(target, "left", `${move}px`);
-      // }
-      // console.log(step, absStep, move,"cccc");
-    // },
+      lastTransform = this.getCurrentTransform(target);
+
+      if (lastTransform) {
+        translateX = Math.abs(+lastTransform.translateX);
+      }
+
+      this.setTransform(target, {
+        scaleX: "1",
+        skewY: "0",
+        translateX: `-${translateX + move}px`,
+        translateY: "0%",
+        rotate: "0deg",
+      });
+    },
     // Set element Transform
     setTransform(obj, transformValue) {
       let str = "";
@@ -387,15 +395,23 @@ export default {
 
     // Init element drag
     initDrag() {
-      let drop = (this.image = this.$refs["duoViewerImage"]);
+      let x,
+        y,
+        boxX,
+        boxY,
+        pageX,
+        pageY,
+        scrollLeft,
+        scrollTop,
+        drop = (this.image = this.$refs["duoViewerImage"]);
 
       if (!drop) return;
 
       const getScroll = () => {
-        let scrollLeft =
-            document.body.scrollLeft || document.documentElement.scrollLeft,
-          scrollTop =
-            document.body.scrollTop || document.documentElement.scrollTop;
+        (scrollLeft =
+          document.body.scrollLeft || document.documentElement.scrollLeft),
+          (scrollTop =
+            document.body.scrollTop || document.documentElement.scrollTop);
         return {
           scrollLeft,
           scrollTop,
@@ -404,8 +420,8 @@ export default {
 
       // Get the location of the mouse on the page, handle browser compatibility
       const getPage = (e) => {
-        let pageX = e.pageX || e.clientX + getScroll().scrollLeft,
-          pageY = e.pageY || e.clientY + getScroll().scrollTop;
+        (pageX = e.pageX || e.clientX + getScroll().scrollLeft),
+          (pageY = e.pageY || e.clientY + getScroll().scrollTop);
         return {
           pageX,
           pageY,
@@ -417,8 +433,8 @@ export default {
         e = e || window.event;
         // When the mouse is pressed, get the location of the mouse in the box
         // Mouse position in box = mouse position on page - box position on page
-        let x = getPage(e).pageX - drop.offsetLeft,
-          y = getPage(e).pageY - drop.offsetTop;
+        (x = getPage(e).pageX - drop.offsetLeft),
+          (y = getPage(e).pageY - drop.offsetTop);
 
         // When the mouse starts to move
         document.onmousemove = (e) => {
@@ -426,8 +442,7 @@ export default {
           e = e || window.event;
           // When the mouse moves, get the location of the box on the page
           // Box on page = mouse on page - mouse in box
-          let boxX = getPage(e).pageX - x,
-            boxY = getPage(e).pageY - y;
+          (boxX = getPage(e).pageX - x), (boxY = getPage(e).pageY - y);
           drop.style.left = `${boxX}px`;
           drop.style.top = `${boxY}px`;
         };
@@ -436,9 +451,11 @@ export default {
       // Stop dragging when the mouse pops up
       document.onmouseup = () => {
         document.onmousemove = null;
+        this.listDataCache[this.index].left = `${boxX}px`;
+        this.listDataCache[this.index].top = `${boxY}px`;
       };
     },
-
+    // Init mouse wheel event
     initMouseWheel() {
       const scrollFn = (e) => {
         e = e || window.event;
@@ -501,9 +518,9 @@ export default {
           break;
       }
     },
+    // On close
     handleClose() {
       this.$emit("update:show", false);
-      this.viewerSrc = "";
     },
   },
 };
