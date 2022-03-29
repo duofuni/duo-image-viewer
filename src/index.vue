@@ -1,5 +1,5 @@
 <template>
-  <div class="duo-viewer" v-show="show" ref="duoViewer" @click="clickAgent">
+  <div class="duo-viewer" v-if="show" ref="duoViewer" @click="clickAgent">
     <div class="duo-viewer-mask">
       <img
         ref="duoViewerImage"
@@ -120,13 +120,11 @@ export default {
       if (val) {
         this.$emit("open");
         this.index = this.currentIndex;
+        this.init();
       } else {
         this.$emit("close");
       }
     },
-  },
-  mounted() {
-    this.init();
   },
   methods: {
     // Global init
@@ -169,6 +167,8 @@ export default {
       });
 
       Promise.all(promises).then((data) => {
+        this.image = this.$refs["duoViewerImage"];
+
         const { width, height } = $this.listDataCache[index];
 
         $this.setStyleByName($this.image, "width", width);
@@ -210,6 +210,9 @@ export default {
 
       this.setStyleByName(image, "width", `${width}px`);
       this.setStyleByName(image, "height", `${height}px`);
+
+      this.listDataCache[this.index].width = `${width}px`;
+      this.listDataCache[this.index].height = `${height}px`;
     },
 
     // Reset all action
@@ -304,6 +307,8 @@ export default {
         move = step * 34,
         length = this.listLength,
         target = this.$refs["duoViewerImageThumbnailList"];
+
+      if (!target) return;
 
       lastTransform = this.getCurrentTransform(target);
 
@@ -403,7 +408,7 @@ export default {
         pageY,
         scrollLeft,
         scrollTop,
-        drop = (this.image = this.$refs["duoViewerImage"]);
+        drop = this.image;
 
       if (!drop) return;
 
